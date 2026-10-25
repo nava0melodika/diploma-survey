@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Опрос о восприятии рекламы</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; color: #243044; background: #f5f7fa; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 20px; box-sizing: border-box; }
+    main { background: #fff; border-radius: 18px; padding: 30px; max-width: 520px; width: 100%; box-shadow: 0 12px 35px #15253a14; box-sizing: border-box; }
+    h1 { font-size: 1.45rem; margin-top: 0; }
+    p { line-height: 1.55; }
+    button { background: #285ad6; color: white; border: 0; border-radius: 10px; padding: 14px 18px; font-size: 1rem; cursor: pointer; width: 100%; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .muted { color: #59667a; font-size: .9rem; }
+    #error { color: #a12626; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Исследование восприятия рекламы</h1>
+  <p>Приглашаем вас принять участие в коротком анонимном опросе. Участие добровольное; вы можете закрыть анкету в любой момент.</p>
+  <p class="muted">Продолжительность: около 5–7 минут. Пожалуйста, проходите опрос только один раз.</p>
+  <button id="start" type="button">Перейти к анкете</button>
+  <p id="status" class="muted" aria-live="polite"></p>
+  <p id="error" role="alert"></p>
+</main>
+<script>
+  // ====== ЗАМЕНИТЕ ТОЛЬКО ДВЕ ССЫЛКИ НИЖЕ ======
+  const FORM_A = 'https://forms.yandex.ru/u/6ade8dd6c45c07454826f0be';
+  const FORM_B = 'https://forms.yandex.ru/u/6ade8f912c4f891d86758edd';
+  // =============================================
+
+  const button = document.getElementById('start');
+  const status = document.getElementById('status');
+  const error = document.getElementById('error');
+  const STORAGE_KEY = 'skincare_survey_assigned_group_v1';
+
+  function validFormUrl(value) {
+    try {
+      const parsed = new URL(value);
+      return (parsed.protocol === 'https:' || parsed.protocol === 'http:') &&
+        !value.includes('ВСТАВЬТЕ_ССЫЛКУ');
+    } catch { return false; }
+  }
+
+  button.addEventListener('click', () => {
+    error.textContent = '';
+    if (!validFormUrl(FORM_A) || !validFormUrl(FORM_B)) {
+      error.textContent = 'Организатор ещё не добавил ссылки на анкеты. Попробуйте позже.';
+      return;
+    }
+
+    // Сохраняем назначение в этом браузере, чтобы повторное открытие
+    // страницы не перенаправляло того же человека на другой вариант.
+    let group;
+    try { group = localStorage.getItem(STORAGE_KEY); } catch (_) {}
+    if (group !== 'A' && group !== 'B') {
+      const random = new Uint32Array(1);
+      crypto.getRandomValues(random);
+      group = (random[0] % 2 === 0) ? 'A' : 'B';
+      try { localStorage.setItem(STORAGE_KEY, group); } catch (_) {}
+    }
+    button.disabled = true;
+    status.textContent = 'Открываем анкету…';
+    window.location.assign(group === 'A' ? FORM_A : FORM_B);
+  });
+</script>
+</body>
+</html>
